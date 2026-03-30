@@ -14,17 +14,18 @@ import {
   Zap,
   Globe,
   Code2,
-  Cpu,
+  Menu,
+  X,
 } from "lucide-react";
 
-// ─── GitHub SVG (not available in lucide-react v0.383.0) ─────────────────────
+// ─── GitHub SVG ───────────────────────────────────────────────────────────────
 const GitHubIcon = ({ size = 15 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z" />
   </svg>
 );
 
-// ─── LinkedIn SVG (not available in lucide-react) ────────────────────────────
+// ─── LinkedIn SVG ─────────────────────────────────────────────────────────────
 const LinkedInIcon = ({ size = 15 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
     <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
@@ -33,14 +34,13 @@ const LinkedInIcon = ({ size = 15 }) => (
   </svg>
 );
 
-// images
 const MY_PHOTO = "/piyush.jpg";
 const PROJECT_IMAGES = {
   "Safely Rest": "/safely-rest.png",
   "Save Rupeee": "/save-rupeee.png",
 };
 
-// ─── Data ────────────────────────────────────────────────────────────────────
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
 const PROJECTS = [
   {
@@ -181,7 +181,7 @@ const tk = (dark) => ({
   sub: dark ? "#94a3b8" : "#475569",
 });
 
-// ─── Hooks ───────────────────────────────────────────────────────────────────
+// ─── Hooks ────────────────────────────────────────────────────────────────────
 
 function useInView() {
   const ref = useRef(null);
@@ -204,7 +204,19 @@ function useInView() {
   return [ref, inView];
 }
 
-// ─── Shared ──────────────────────────────────────────────────────────────────
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false,
+  );
+  useEffect(() => {
+    const fn = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, []);
+  return isMobile;
+}
+
+// ─── Shared ───────────────────────────────────────────────────────────────────
 
 function FadeIn({ children, delay = 0, style = {} }) {
   const [ref, inView] = useInView();
@@ -258,6 +270,7 @@ function SectionLabel({ text }) {
           height: 1,
           background: "#22c55e",
           display: "block",
+          flexShrink: 0,
         }}
       />
       <span
@@ -290,18 +303,24 @@ function DotGrid({ dark }) {
   );
 }
 
-// ─── Navbar ──────────────────────────────────────────────────────────────────
+// ─── Navbar ───────────────────────────────────────────────────────────────────
 
 function Navbar({ dark, toggleDark }) {
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const theme = tk(dark);
+  const isMobile = useIsMobile();
+
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 24);
     window.addEventListener("scroll", fn);
     return () => window.removeEventListener("scroll", fn);
   }, []);
-  const scrollTo = (id) =>
+
+  const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setMenuOpen(false);
+  };
 
   return (
     <nav
@@ -316,8 +335,12 @@ function Navbar({ dark, toggleDark }) {
           ? dark
             ? "rgba(11,17,32,0.88)"
             : "rgba(240,244,248,0.88)"
-          : "transparent",
-        borderBottom: `1px solid ${scrolled ? theme.border : "transparent"}`,
+          : menuOpen
+            ? dark
+              ? "rgba(11,17,32,0.98)"
+              : "rgba(240,244,248,0.98)"
+            : "transparent",
+        borderBottom: `1px solid ${scrolled || menuOpen ? theme.border : "transparent"}`,
         transition: "all 0.3s",
       }}
     >
@@ -325,7 +348,7 @@ function Navbar({ dark, toggleDark }) {
         style={{
           maxWidth: 1000,
           margin: "0 auto",
-          padding: "0 24px",
+          padding: "0 20px",
           height: 56,
           display: "flex",
           alignItems: "center",
@@ -338,59 +361,129 @@ function Navbar({ dark, toggleDark }) {
             fontWeight: 700,
             color: "#22c55e",
             fontSize: 15,
+            flexShrink: 0,
           }}
         >
           Piyush Raj
         </span>
-        <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+
+        {isMobile ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <button
+              onClick={toggleDark}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: theme.muted,
+                display: "flex",
+                alignItems: "center",
+                padding: 4,
+              }}
+            >
+              {dark ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: theme.muted,
+                display: "flex",
+                alignItems: "center",
+                padding: 4,
+              }}
+            >
+              {menuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+            {["projects", "process", "skills", "contact"].map((s) => (
+              <button
+                key={s}
+                onClick={() => scrollTo(s)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontFamily: "monospace",
+                  textTransform: "capitalize",
+                  letterSpacing: "0.05em",
+                  color: theme.muted,
+                  transition: "color 0.2s",
+                }}
+                onMouseEnter={(e) => (e.target.style.color = theme.text)}
+                onMouseLeave={(e) => (e.target.style.color = theme.muted)}
+              >
+                {s}
+              </button>
+            ))}
+            <button
+              onClick={toggleDark}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: theme.muted,
+                display: "flex",
+                alignItems: "center",
+                padding: 4,
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = theme.text)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = theme.muted)}
+            >
+              {dark ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Mobile menu dropdown */}
+      {isMobile && menuOpen && (
+        <div
+          style={{
+            borderTop: `1px solid ${theme.border}`,
+            padding: "12px 20px 20px",
+          }}
+        >
           {["projects", "process", "skills", "contact"].map((s) => (
             <button
               key={s}
               onClick={() => scrollTo(s)}
               style={{
+                display: "block",
+                width: "100%",
+                textAlign: "left",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                fontSize: 12,
+                fontSize: 14,
                 fontFamily: "monospace",
                 textTransform: "capitalize",
                 letterSpacing: "0.05em",
                 color: theme.muted,
-                transition: "color 0.2s",
+                padding: "10px 0",
+                borderBottom: `1px solid ${theme.border}`,
               }}
-              onMouseEnter={(e) => (e.target.style.color = theme.text)}
-              onMouseLeave={(e) => (e.target.style.color = theme.muted)}
             >
               {s}
             </button>
           ))}
-          <button
-            onClick={toggleDark}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: theme.muted,
-              display: "flex",
-              alignItems: "center",
-              padding: 4,
-              transition: "color 0.2s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = theme.text)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = theme.muted)}
-          >
-            {dark ? <Sun size={15} /> : <Moon size={15} />}
-          </button>
         </div>
-      </div>
+      )}
     </nav>
   );
 }
 
-// ─── Hero ────────────────────────────────────────────────────────────────────
+// ─── Hero ─────────────────────────────────────────────────────────────────────
 
 function Hero({ dark }) {
   const theme = tk(dark);
+  const isMobile = useIsMobile();
 
   return (
     <section
@@ -400,6 +493,7 @@ function Hero({ dark }) {
         alignItems: "center",
         position: "relative",
         zIndex: 1,
+        overflow: "hidden",
       }}
     >
       <div
@@ -407,8 +501,8 @@ function Hero({ dark }) {
           position: "absolute",
           top: -100,
           left: -100,
-          width: 500,
-          height: 500,
+          width: isMobile ? 300 : 500,
+          height: isMobile ? 300 : 500,
           background:
             "radial-gradient(circle, rgba(34,197,94,0.09) 0%, transparent 68%)",
           pointerEvents: "none",
@@ -419,35 +513,107 @@ function Hero({ dark }) {
         style={{
           maxWidth: 1000,
           margin: "0 auto",
-          padding: "80px 24px 40px",
+          padding: isMobile ? "100px 20px 60px" : "80px 24px 40px",
           width: "100%",
+          boxSizing: "border-box",
         }}
       >
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr auto",
-            gap: 48,
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? 32 : 48,
             alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          {/* Left */}
-          <div style={{ animation: "fadeUp 0.65s ease both" }}>
+          {/* Photo — shown first on mobile */}
+          {isMobile && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                width: "100%",
+                animation: "fadeUp 0.65s ease both",
+              }}
+            >
+              <div style={{ position: "relative" }}>
+                <div
+                  style={{
+                    width: 160,
+                    height: 160,
+                    overflow: "hidden",
+                    border: "2px solid rgba(34,197,94,0.45)",
+                    boxShadow: "0 0 36px rgba(34,197,94,0.14)",
+                    borderRadius: 3,
+                  }}
+                >
+                  <img
+                    src={MY_PHOTO}
+                    alt="Piyush Raj"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: -5,
+                    right: -5,
+                    width: 16,
+                    height: 16,
+                    border: "2px solid #22c55e",
+                    borderTop: "none",
+                    borderLeft: "none",
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -5,
+                    left: -5,
+                    width: 16,
+                    height: 16,
+                    border: "2px solid #22c55e",
+                    borderBottom: "none",
+                    borderRight: "none",
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Left — text */}
+          <div
+            style={{
+              animation: "fadeUp 0.65s ease both",
+              textAlign: isMobile ? "center" : "left",
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
             <h1
               style={{
-                fontSize: "clamp(44px,6vw,74px)",
+                fontSize: isMobile
+                  ? "clamp(36px,9vw,52px)"
+                  : "clamp(44px,6vw,74px)",
                 fontWeight: 900,
                 lineHeight: 1,
-                letterSpacing: "-2.5px",
+                letterSpacing: "-2px",
                 marginBottom: 10,
                 color: theme.text,
+                wordBreak: "break-word",
               }}
             >
               Piyush Raj
             </h1>
             <h2
               style={{
-                fontSize: "clamp(16px,2.2vw,21px)",
+                fontSize: isMobile ? 16 : "clamp(16px,2.2vw,21px)",
                 fontWeight: 500,
                 color: "#22c55e",
                 marginBottom: 20,
@@ -458,12 +624,14 @@ function Hero({ dark }) {
             </h2>
             <p
               style={{
-                fontSize: 17,
+                fontSize: isMobile ? 15 : 17,
                 fontWeight: 600,
-                maxWidth: 460,
+                maxWidth: isMobile ? "100%" : 460,
                 marginBottom: 10,
                 color: theme.text,
                 lineHeight: 1.5,
+                marginLeft: isMobile ? "auto" : 0,
+                marginRight: isMobile ? "auto" : 0,
               }}
             >
               I build scalable web apps with clean architecture.
@@ -471,16 +639,25 @@ function Hero({ dark }) {
             <p
               style={{
                 fontSize: 14,
-                maxWidth: 400,
+                maxWidth: isMobile ? "100%" : 400,
                 marginBottom: 36,
                 color: theme.muted,
                 lineHeight: 1.75,
+                marginLeft: isMobile ? "auto" : 0,
+                marginRight: isMobile ? "auto" : 0,
               }}
             >
               Focused on MERN stack, backend systems, and real-world
               applications.
             </p>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                justifyContent: isMobile ? "center" : "flex-start",
+              }}
+            >
               <button
                 onClick={() =>
                   document
@@ -501,6 +678,7 @@ function Hero({ dark }) {
                   boxShadow: "0 0 28px rgba(34,197,94,0.28)",
                   borderRadius: 2,
                   transition: "all 0.2s",
+                  whiteSpace: "nowrap",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "#16a34a";
@@ -515,6 +693,7 @@ function Hero({ dark }) {
               </button>
               <a
                 href="/Piyush-Resume-1stApril.pdf"
+                download="Piyush_Raj_Resume.pdf"
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -527,6 +706,7 @@ function Hero({ dark }) {
                   textDecoration: "none",
                   borderRadius: 2,
                   transition: "all 0.2s",
+                  whiteSpace: "nowrap",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = "#22c55e";
@@ -536,79 +716,80 @@ function Hero({ dark }) {
                   e.currentTarget.style.borderColor = theme.border;
                   e.currentTarget.style.color = theme.text;
                 }}
-                download
               >
                 Download Resume <Download size={14} />
               </a>
             </div>
           </div>
 
-          {/* Right */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 18,
-              animation: "fadeUp 0.65s ease 0.15s both",
-            }}
-          >
-            {/* Photo */}
-            <div style={{ position: "relative" }}>
-              <div
-                style={{
-                  width: 360,
-                  height: 360,
-                  overflow: "hidden",
-                  border: "2px solid rgba(34,197,94,0.45)",
-                  boxShadow: "0 0 36px rgba(34,197,94,0.14)",
-                  borderRadius: 3,
-                }}
-              >
-                <img
-                  src={MY_PHOTO}
-                  alt="Piyush Raj"
+          {/* Right photo — desktop only */}
+          {!isMobile && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 18,
+                animation: "fadeUp 0.65s ease 0.15s both",
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ position: "relative" }}>
+                <div
                   style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
+                    width: 300,
+                    height: 300,
+                    overflow: "hidden",
+                    border: "2px solid rgba(34,197,94,0.45)",
+                    boxShadow: "0 0 36px rgba(34,197,94,0.14)",
+                    borderRadius: 3,
+                  }}
+                >
+                  <img
+                    src={MY_PHOTO}
+                    alt="Piyush Raj"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: -5,
+                    right: -5,
+                    width: 20,
+                    height: 20,
+                    border: "2px solid #22c55e",
+                    borderTop: "none",
+                    borderLeft: "none",
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -5,
+                    left: -5,
+                    width: 20,
+                    height: 20,
+                    border: "2px solid #22c55e",
+                    borderBottom: "none",
+                    borderRight: "none",
                   }}
                 />
               </div>
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: -5,
-                  right: -5,
-                  width: 20,
-                  height: 20,
-                  border: "2px solid #22c55e",
-                  borderTop: "none",
-                  borderLeft: "none",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  top: -5,
-                  left: -5,
-                  width: 20,
-                  height: 20,
-                  border: "2px solid #22c55e",
-                  borderBottom: "none",
-                  borderRight: "none",
-                }}
-              />
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
   );
 }
 
-// ─── Projects ────────────────────────────────────────────────────────────────
+// ─── Projects ─────────────────────────────────────────────────────────────────
 
 function ProjectCard({ project, dark, delay }) {
   const [ref, inView] = useInView();
@@ -635,15 +816,17 @@ function ProjectCard({ project, dark, delay }) {
           : "none",
         borderRadius: 3,
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      {/* Image */}
       <div
         style={{
           width: "100%",
           height: 196,
           overflow: "hidden",
           borderBottom: `1px solid ${theme.border}`,
+          flexShrink: 0,
         }}
       >
         <img
@@ -660,13 +843,21 @@ function ProjectCard({ project, dark, delay }) {
         />
       </div>
 
-      <div style={{ padding: "22px 24px" }}>
+      <div
+        style={{
+          padding: "22px 20px",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <div
           style={{
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "space-between",
             marginBottom: 10,
+            gap: 8,
           }}
         >
           <h3
@@ -675,11 +866,15 @@ function ProjectCard({ project, dark, delay }) {
               fontWeight: 800,
               letterSpacing: "-0.5px",
               color: theme.text,
+              flex: 1,
+              minWidth: 0,
             }}
           >
             {project.title}
           </h3>
-          <div style={{ display: "flex", gap: 8, marginLeft: 12 }}>
+          <div
+            style={{ display: "flex", gap: 8, marginLeft: 8, flexShrink: 0 }}
+          >
             <a
               href={project.demo}
               style={{
@@ -731,7 +926,6 @@ function ProjectCard({ project, dark, delay }) {
           ))}
         </div>
 
-        {/* Features */}
         <div style={{ marginBottom: 16 }}>
           <p
             style={{
@@ -776,11 +970,9 @@ function ProjectCard({ project, dark, delay }) {
           </ul>
         </div>
 
-        {/* Engineering */}
         <div
           style={{
             borderLeft: "3px solid #22c55e",
-            paddingLeft: 12,
             background: "rgba(34,197,94,0.04)",
             padding: "12px 14px",
             marginBottom: 20,
@@ -830,7 +1022,14 @@ function ProjectCard({ project, dark, delay }) {
           </ul>
         </div>
 
-        <div style={{ display: "flex", gap: 10 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            flexWrap: "wrap",
+            marginTop: "auto",
+          }}
+        >
           <a
             href={project.demo}
             style={{
@@ -845,6 +1044,7 @@ function ProjectCard({ project, dark, delay }) {
               textDecoration: "none",
               borderRadius: 2,
               transition: "background 0.2s",
+              whiteSpace: "nowrap",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = "#16a34a")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "#22c55e")}
@@ -865,6 +1065,7 @@ function ProjectCard({ project, dark, delay }) {
               textDecoration: "none",
               borderRadius: 2,
               transition: "all 0.2s",
+              whiteSpace: "nowrap",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = "#22c55e";
@@ -885,22 +1086,25 @@ function ProjectCard({ project, dark, delay }) {
 
 function Projects({ dark }) {
   const theme = tk(dark);
+  const isMobile = useIsMobile();
   return (
     <section
       id="projects"
       style={{
         maxWidth: 1000,
         margin: "0 auto",
-        padding: "100px 24px",
+        padding: isMobile ? "80px 20px" : "100px 24px",
         position: "relative",
         zIndex: 1,
+        boxSizing: "border-box",
+        width: "100%",
       }}
     >
       <FadeIn>
         <SectionLabel text="Work" />
         <h2
           style={{
-            fontSize: "clamp(28px,4vw,40px)",
+            fontSize: "clamp(26px,4vw,40px)",
             fontWeight: 900,
             letterSpacing: "-1.5px",
             marginBottom: 48,
@@ -913,7 +1117,7 @@ function Projects({ dark }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
           gap: 20,
         }}
       >
@@ -925,10 +1129,11 @@ function Projects({ dark }) {
   );
 }
 
-// ─── Process ─────────────────────────────────────────────────────────────────
+// ─── Process ──────────────────────────────────────────────────────────────────
 
 function Process({ dark }) {
   const theme = tk(dark);
+  const isMobile = useIsMobile();
   return (
     <section
       id="process"
@@ -938,15 +1143,23 @@ function Process({ dark }) {
         background: dark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.025)",
         borderTop: `1px solid ${theme.border}`,
         borderBottom: `1px solid ${theme.border}`,
-        padding: "100px 0",
+        padding: isMobile ? "80px 0" : "100px 0",
       }}
     >
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 24px" }}>
+      <div
+        style={{
+          maxWidth: 1000,
+          margin: "0 auto",
+          padding: isMobile ? "0 20px" : "0 24px",
+          boxSizing: "border-box",
+          width: "100%",
+        }}
+      >
         <FadeIn>
           <SectionLabel text="Methodology" />
           <h2
             style={{
-              fontSize: "clamp(28px,4vw,40px)",
+              fontSize: "clamp(26px,4vw,40px)",
               fontWeight: 900,
               letterSpacing: "-1.5px",
               marginBottom: 8,
@@ -971,7 +1184,7 @@ function Process({ dark }) {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(270px,1fr))",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
             gap: 12,
             marginBottom: 52,
           }}
@@ -986,6 +1199,7 @@ function Process({ dark }) {
                   background: theme.surface,
                   borderRadius: 3,
                   transition: "border-color 0.2s",
+                  boxSizing: "border-box",
                 }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.borderColor = "rgba(34,197,94,0.38)")
@@ -1038,26 +1252,29 @@ function Process({ dark }) {
   );
 }
 
-// ─── Skills ──────────────────────────────────────────────────────────────────
+// ─── Skills ───────────────────────────────────────────────────────────────────
 
 function Skills({ dark }) {
   const theme = tk(dark);
+  const isMobile = useIsMobile();
   return (
     <section
       id="skills"
       style={{
         maxWidth: 1000,
         margin: "0 auto",
-        padding: "100px 24px",
+        padding: isMobile ? "80px 20px" : "100px 24px",
         position: "relative",
         zIndex: 1,
+        boxSizing: "border-box",
+        width: "100%",
       }}
     >
       <FadeIn>
         <SectionLabel text="Stack" />
         <h2
           style={{
-            fontSize: "clamp(28px,4vw,40px)",
+            fontSize: "clamp(26px,4vw,40px)",
             fontWeight: 900,
             letterSpacing: "-1.5px",
             marginBottom: 48,
@@ -1070,7 +1287,7 @@ function Skills({ dark }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
+          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
           gap: 14,
         }}
       >
@@ -1078,12 +1295,13 @@ function Skills({ dark }) {
           <FadeIn key={category} delay={ci * 0.08}>
             <div
               style={{
-                padding: "22px 24px",
+                padding: "22px 16px",
                 height: "100%",
                 border: `1px solid ${theme.border}`,
                 background: theme.surface,
                 borderRadius: 3,
                 transition: "border-color 0.25s",
+                boxSizing: "border-box",
               }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.borderColor = "rgba(34,197,94,0.38)")
@@ -1132,10 +1350,11 @@ function Skills({ dark }) {
   );
 }
 
-// ─── Contact ─────────────────────────────────────────────────────────────────
+// ─── Contact ──────────────────────────────────────────────────────────────────
 
 function Contact({ dark }) {
   const theme = tk(dark);
+  const isMobile = useIsMobile();
   const links = [
     {
       icon: Mail,
@@ -1175,7 +1394,8 @@ function Contact({ dark }) {
         zIndex: 1,
         background: dark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.025)",
         borderTop: `1px solid ${theme.border}`,
-        padding: "100px 0",
+        padding: isMobile ? "80px 0" : "100px 0",
+        overflow: "hidden",
       }}
     >
       <div
@@ -1190,12 +1410,20 @@ function Contact({ dark }) {
           pointerEvents: "none",
         }}
       />
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 24px" }}>
+      <div
+        style={{
+          maxWidth: 1000,
+          margin: "0 auto",
+          padding: isMobile ? "0 20px" : "0 24px",
+          boxSizing: "border-box",
+          width: "100%",
+        }}
+      >
         <FadeIn>
           <SectionLabel text="Contact" />
           <h2
             style={{
-              fontSize: "clamp(28px,4vw,40px)",
+              fontSize: "clamp(26px,4vw,40px)",
               fontWeight: 900,
               letterSpacing: "-1.5px",
               marginBottom: 8,
@@ -1220,7 +1448,7 @@ function Contact({ dark }) {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
             gap: 12,
             marginBottom: 28,
           }}
@@ -1239,6 +1467,8 @@ function Contact({ dark }) {
                   textDecoration: "none",
                   borderRadius: 3,
                   transition: "all 0.25s",
+                  boxSizing: "border-box",
+                  minWidth: 0,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = "rgba(34,197,94,0.42)";
@@ -1270,7 +1500,7 @@ function Contact({ dark }) {
                     <Icon size={15} />
                   )}
                 </div>
-                <div>
+                <div style={{ minWidth: 0, flex: 1 }}>
                   <p
                     style={{
                       fontSize: 10,
@@ -1288,6 +1518,9 @@ function Contact({ dark }) {
                       fontFamily: "monospace",
                       color: theme.sub,
                       fontWeight: 500,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {label}
@@ -1301,6 +1534,7 @@ function Contact({ dark }) {
         <FadeIn delay={0.28}>
           <a
             href="/Piyush-Resume-1stApril.pdf"
+            download="Piyush_Raj_Resume.pdf"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -1314,6 +1548,7 @@ function Contact({ dark }) {
               boxShadow: "0 0 24px rgba(34,197,94,0.22)",
               borderRadius: 2,
               transition: "all 0.2s",
+              whiteSpace: "nowrap",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = "#16a34a";
@@ -1323,7 +1558,6 @@ function Contact({ dark }) {
               e.currentTarget.style.background = "#22c55e";
               e.currentTarget.style.transform = "translateY(0)";
             }}
-            download
           >
             Download Resume <Download size={14} />
           </a>
@@ -1333,7 +1567,7 @@ function Contact({ dark }) {
   );
 }
 
-// ─── Footer ──────────────────────────────────────────────────────────────────
+// ─── Footer ───────────────────────────────────────────────────────────────────
 
 function Footer({ dark }) {
   const theme = tk(dark);
@@ -1343,7 +1577,7 @@ function Footer({ dark }) {
         position: "relative",
         zIndex: 1,
         borderTop: `1px solid ${theme.border}`,
-        padding: "24px",
+        padding: "24px 20px",
       }}
     >
       <div
@@ -1398,7 +1632,7 @@ function Footer({ dark }) {
   );
 }
 
-// ─── App ─────────────────────────────────────────────────────────────────────
+// ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [dark, setDark] = useState(true);
@@ -1413,12 +1647,14 @@ export default function App() {
         minHeight: "100vh",
         transition: "background-color 0.3s, color 0.3s",
         position: "relative",
+        overflowX: "hidden",
       }}
     >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800;9..40,900&family=DM+Mono:wght@400;500&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; overflow-x: hidden; }
+        body { overflow-x: hidden; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes blink  { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
         ::-webkit-scrollbar { width: 4px; }
@@ -1426,6 +1662,7 @@ export default function App() {
         ::-webkit-scrollbar-thumb { background: rgba(34,197,94,0.28); border-radius: 2px; }
         a { text-decoration: none; }
         button { font-family: inherit; }
+        img { max-width: 100%; }
       `}</style>
       <DotGrid dark={dark} />
       <Navbar dark={dark} toggleDark={() => setDark((d) => !d)} />
