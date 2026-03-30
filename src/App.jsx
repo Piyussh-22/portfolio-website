@@ -33,11 +33,11 @@ const LinkedInIcon = ({ size = 15 }) => (
   </svg>
 );
 
-// ─── REPLACE with your actual image paths in /public/ ────────────────────────
-const MY_PHOTO = "public/piyush.jpg?text=PR";
+// images
+const MY_PHOTO = "/piyush.jpg";
 const PROJECT_IMAGES = {
-  "Safely Rest": "https://placehold.co/800x400/0a1628/22c55e?text=Safely+Rest",
-  "Save Rupeee": "https://placehold.co/800x400/0a1628/22c55e?text=Save+Rupeee",
+  "Safely Rest": "/safely-rest.png",
+  "Save Rupeee": "/save-rupeee.png",
 };
 
 // ─── Data ────────────────────────────────────────────────────────────────────
@@ -514,7 +514,7 @@ function Hero({ dark }) {
                 View Projects <ArrowDown size={14} />
               </button>
               <a
-                href="/resume.pdf"
+                href="/Piyush-Resume-1stApril.pdf"
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -536,6 +536,7 @@ function Hero({ dark }) {
                   e.currentTarget.style.borderColor = theme.border;
                   e.currentTarget.style.color = theme.text;
                 }}
+                download
               >
                 Download Resume <Download size={14} />
               </a>
@@ -1299,7 +1300,7 @@ function Contact({ dark }) {
 
         <FadeIn delay={0.28}>
           <a
-            href="/resume.pdf"
+            href="/Piyush-Resume-1stApril.pdf"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -1322,6 +1323,7 @@ function Contact({ dark }) {
               e.currentTarget.style.background = "#22c55e";
               e.currentTarget.style.transform = "translateY(0)";
             }}
+            download
           >
             Download Resume <Download size={14} />
           </a>
