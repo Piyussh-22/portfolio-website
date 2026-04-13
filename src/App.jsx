@@ -68,7 +68,7 @@ const PROJECTS = [
       "Google OAuth with server-side idToken verification handling 3 account states; sparse unique index supports hybrid auth in one collection",
     ],
     demo: "https://safely-rest-frontend.vercel.app/",
-    github: "https://github.com/Piyussh-22/SafelyRest-Backend",
+    github: "https://github.com/Piyussh-22/SafelyRest-Development",
   },
   {
     title: "Save Rupeee",
@@ -692,8 +692,8 @@ function Hero({ dark }) {
                 View Projects <ArrowDown size={14} />
               </button>
               <a
-                href="/Piyush-Resume-1stApril.pdf"
-                download="Piyush_Raj_Resume.pdf"
+                href="/Piyush-Resume.pdf"
+                download="Piyush-Resume.pdf"
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -1533,8 +1533,8 @@ function Contact({ dark }) {
 
         <FadeIn delay={0.28}>
           <a
-            href="/Piyush-Resume-1stApril.pdf"
-            download="Piyush_Raj_Resume.pdf"
+            href="/Piyush-Resume.pdf"
+            download="Piyush-Resume.pdf"
             style={{
               display: "inline-flex",
               alignItems: "center",
